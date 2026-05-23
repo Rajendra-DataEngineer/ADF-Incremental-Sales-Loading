@@ -24,6 +24,25 @@ This project demonstrates a real-time **Incremental Load Pipeline** using **Wate
 ## Screenshots
 <img width="236" height="118" alt="image" src="https://github.com/user-attachments/assets/013cb9cf-7d34-4b4a-a4f0-b7cd1aef7bf4" />
 
+<img width="515" height="304" alt="image" src="https://github.com/user-attachments/assets/2a6fd701-9a60-427f-bf19-69eb13ec6148" />
+
+<img width="502" height="331" alt="image" src="https://github.com/user-attachments/assets/6736cfd9-e8c7-402f-b8dd-83e7c0e62cfb" />
+
+
+<img width="524" height="317" alt="image" src="https://github.com/user-attachments/assets/52ec780d-8b40-4266-97f9-25422ec9d406" />
+
+<img width="523" height="327" alt="image" src="https://github.com/user-attachments/assets/a0902916-fda3-4a5c-a1c9-a5b5e6d48066" />
+
+
+
+<img width="509" height="299" alt="image" src="https://github.com/user-attachments/assets/b0813499-f6af-4ad4-ad1a-145ab3276213" />
+
+<img width="503" height="332" alt="image" src="https://github.com/user-attachments/assets/5703274c-e0c5-4510-9a27-d48fbb184df9" />
+
+
+
+
+
 
 ## How to Run
 1. Update Linked Services with your credentials
