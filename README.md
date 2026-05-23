@@ -26,7 +26,7 @@ This project demonstrates a real-time **Incremental Load Pipeline** using **Wate
 
 <img width="515" height="304" alt="image" src="https://github.com/user-attachments/assets/2a6fd701-9a60-427f-bf19-69eb13ec6148" />
 
-<img width="502" height="331" alt="image" src="https://github.com/user-attachments/assets/6736cfd9-e8c7-402f-b8dd-83e7c0e62cfb" />
+
 
 
 
