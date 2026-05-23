@@ -29,15 +29,15 @@ This project demonstrates a real-time **Incremental Load Pipeline** using **Wate
 <img width="502" height="331" alt="image" src="https://github.com/user-attachments/assets/6736cfd9-e8c7-402f-b8dd-83e7c0e62cfb" />
 
 
-<img width="524" height="317" alt="image" src="https://github.com/user-attachments/assets/52ec780d-8b40-4266-97f9-25422ec9d406" />
 
-<img width="523" height="327" alt="image" src="https://github.com/user-attachments/assets/a0902916-fda3-4a5c-a1c9-a5b5e6d48066" />
+
+
 
 
 
 <img width="509" height="299" alt="image" src="https://github.com/user-attachments/assets/b0813499-f6af-4ad4-ad1a-145ab3276213" />
 
-<img width="503" height="332" alt="image" src="https://github.com/user-attachments/assets/5703274c-e0c5-4510-9a27-d48fbb184df9" />
+
 
 
 
