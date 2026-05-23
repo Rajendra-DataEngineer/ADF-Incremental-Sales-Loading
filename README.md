@@ -27,23 +27,6 @@ This project demonstrates a real-time **Incremental Load Pipeline** using **Wate
 <img width="515" height="304" alt="image" src="https://github.com/user-attachments/assets/2a6fd701-9a60-427f-bf19-69eb13ec6148" />
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## How to Run
 1. Update Linked Services with your credentials
 2. Update Datasets paths
@@ -59,3 +42,7 @@ This project demonstrates a real-time **Incremental Load Pipeline** using **Wate
 - Mapping Data Flow transformations
 - Parameterized multi-file processing pipeline
 - Microsoft Fabric integration
+- 
+------
+- # ** Made by Rajendra K **
+- Aspiring Azure Data Engineer | Open to UK Relocation
