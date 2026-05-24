@@ -12,7 +12,15 @@
 					"name": "BronzeCustomers"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_customers",
+						"type": "DatasetReference"
+					},
+					"name": "WriteToSilverContainer"
+				}
+			],
 			"transformations": [
 				{
 					"name": "SilverCustomersSink"
@@ -27,7 +35,14 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> BronzeCustomers",
-				"BronzeCustomers derive(loaddate = currentTimestamp()) ~> SilverCustomersSink"
+				"BronzeCustomers derive(loaddate = currentTimestamp()) ~> SilverCustomersSink",
+				"SilverCustomersSink sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> WriteToSilverContainer"
 			]
 		}
 	}
