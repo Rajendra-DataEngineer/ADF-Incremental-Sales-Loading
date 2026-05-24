@@ -1,0 +1,42 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adflearingraj"
+		},
+		"AzureSqlLS_password": {
+			"value": ""
+		},
+		"SalesCSVsource_accountKey": {
+			"value": ""
+		},
+		"_ls_azure_Databricks_accessToken": {
+			"value": ""
+		},
+		"ls_adls_gen2_accountKey": {
+			"value": ""
+		},
+		"AzureSqlLS_properties_typeProperties_server": {
+			"value": "sqlserever-raj-project.database.windows.net"
+		},
+		"AzureSqlLS_properties_typeProperties_database": {
+			"value": "db-sales-sink"
+		},
+		"AzureSqlLS_properties_typeProperties_userName": {
+			"value": "Rajendra"
+		},
+		"SalesCSVsource_properties_typeProperties_url": {
+			"value": "https://rndlearning.dfs.core.windows.net/"
+		},
+		"ls_adls_gen2_properties_typeProperties_url": {
+			"value": "https://rndlearning.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

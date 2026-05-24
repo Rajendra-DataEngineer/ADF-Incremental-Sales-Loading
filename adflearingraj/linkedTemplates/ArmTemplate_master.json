@@ -1,0 +1,105 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adflearingraj"
+		},
+		"AzureSqlLS_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'AzureSqlLS'"
+		},
+		"SalesCSVsource_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'SalesCSVsource'"
+		},
+		"_ls_azure_Databricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of '_ls_azure_Databricks'"
+		},
+		"ls_adls_gen2_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ls_adls_gen2'"
+		},
+		"AzureSqlLS_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "sqlserever-raj-project.database.windows.net"
+		},
+		"AzureSqlLS_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "db-sales-sink"
+		},
+		"AzureSqlLS_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "Rajendra"
+		},
+		"SalesCSVsource_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://rndlearning.dfs.core.windows.net/"
+		},
+		"ls_adls_gen2_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://rndlearning.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adflearingraj_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureSqlLS_password": {
+						"value": "[parameters('AzureSqlLS_password')]"
+					},
+					"SalesCSVsource_accountKey": {
+						"value": "[parameters('SalesCSVsource_accountKey')]"
+					},
+					"_ls_azure_Databricks_accessToken": {
+						"value": "[parameters('_ls_azure_Databricks_accessToken')]"
+					},
+					"ls_adls_gen2_accountKey": {
+						"value": "[parameters('ls_adls_gen2_accountKey')]"
+					},
+					"AzureSqlLS_properties_typeProperties_server": {
+						"value": "[parameters('AzureSqlLS_properties_typeProperties_server')]"
+					},
+					"AzureSqlLS_properties_typeProperties_database": {
+						"value": "[parameters('AzureSqlLS_properties_typeProperties_database')]"
+					},
+					"AzureSqlLS_properties_typeProperties_userName": {
+						"value": "[parameters('AzureSqlLS_properties_typeProperties_userName')]"
+					},
+					"SalesCSVsource_properties_typeProperties_url": {
+						"value": "[parameters('SalesCSVsource_properties_typeProperties_url')]"
+					},
+					"ls_adls_gen2_properties_typeProperties_url": {
+						"value": "[parameters('ls_adls_gen2_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}
