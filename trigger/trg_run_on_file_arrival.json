@@ -9,11 +9,18 @@
 					"referenceName": "pl_customer_bronze_to_silver",
 					"type": "PipelineReference"
 				}
+			},
+			{
+				"pipelineReference": {
+					"referenceName": "pl_silver_to_gold",
+					"type": "PipelineReference"
+				}
 			}
 		],
 		"type": "BlobEventsTrigger",
 		"typeProperties": {
-			"blobPathBeginsWith": "/bronze/blobs/",
+			"blobPathBeginsWith": "/silver/blobs/silver/sales_transformed/",
+			"blobPathEndsWith": ".delta",
 			"ignoreEmptyBlobs": true,
 			"scope": "/subscriptions/d7fe91dc-fd28-488b-8161-a61024d7dc79/resourceGroups/rg-learing/providers/Microsoft.Storage/storageAccounts/rndlearning",
 			"events": [
