@@ -38,11 +38,6 @@ This project demonstrates a real-time **Incremental Load Pipeline** using **Wate
 - Lookup + Copy Activity pattern for watermark
 - Best practices for production-ready pipelines
 
-## Next Projects
-- Mapping Data Flow transformations
-- Parameterized multi-file processing pipeline
-- Microsoft Fabric integration
-- 
 ------
 - # ** Made by Rajendra K **
 - Aspiring Azure Data Engineer | Open to UK Relocation
