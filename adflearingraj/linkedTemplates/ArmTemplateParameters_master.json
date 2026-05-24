@@ -32,6 +32,9 @@
 		"ls_adls_gen2_properties_typeProperties_url": {
 			"value": "https://rndlearning.dfs.core.windows.net/"
 		},
+		"trg_run_on_file_arrival_properties_typeProperties_scope": {
+			"value": "/subscriptions/d7fe91dc-fd28-488b-8161-a61024d7dc79/resourceGroups/rg-learing/providers/Microsoft.Storage/storageAccounts/rndlearning"
+		},
 		"containerUri": {
 			"value": ""
 		},

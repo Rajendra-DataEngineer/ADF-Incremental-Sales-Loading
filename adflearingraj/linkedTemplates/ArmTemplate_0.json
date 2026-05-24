@@ -42,6 +42,10 @@
 		"ls_adls_gen2_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://rndlearning.dfs.core.windows.net/"
+		},
+		"trg_run_on_file_arrival_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/d7fe91dc-fd28-488b-8161-a61024d7dc79/resourceGroups/rg-learing/providers/Microsoft.Storage/storageAccounts/rndlearning"
 		}
 	},
 	"variables": {
@@ -214,6 +218,30 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/ds_gold_sales')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_gen2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "gold"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_gen2')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ds_silver_customers')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -235,6 +263,51 @@
 					"quoteChar": "\""
 				},
 				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_gen2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_silver_customers_parquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_gen2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "silver"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "SaleID",
+						"type": "INT_32"
+					},
+					{
+						"name": "CustomerID",
+						"type": "INT_32"
+					},
+					{
+						"name": "Amount",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "SaleDate",
+						"type": "DATE"
+					},
+					{
+						"name": "IngestionDate",
+						"type": "DATE"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_adls_gen2')]"
@@ -535,6 +608,206 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_bronze_customers')]",
 				"[concat(variables('factoryId'), '/datasets/ds_silver_customers')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_silver_to_gold')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_silver_customers_parquet",
+								"type": "DatasetReference"
+							},
+							"name": "silvercustomers"
+						},
+						{
+							"dataset": {
+								"referenceName": "salesdata1",
+								"type": "DatasetReference"
+							},
+							"name": "silversales"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ds_gold_sales",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "aggregate1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SaleID as integer,",
+						"          CustomerID as integer,",
+						"          Amount as double,",
+						"          SaleDate as date,",
+						"          IngestionDate as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> silvercustomers",
+						"source(output(",
+						"          saleID as short,",
+						"          Product as string,",
+						"          amount as integer,",
+						"          saledate as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> silversales",
+						"silversales aggregate(groupBy(Product),",
+						"     totalsales = sum(amount)) ~> aggregate1",
+						"aggregate1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_silver_customers_parquet')]",
+				"[concat(variables('factoryId'), '/datasets/salesdata1')]",
+				"[concat(variables('factoryId'), '/datasets/ds_gold_sales')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_customer_bronze_to_silver')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "df_customer_bronze_to_silver",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_customer_bronze_to_silver",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzeCustomers": {},
+									"WriteToSilverContainer": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_customer_bronze_to_silver')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_silver_to_gold')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_silver_to_gold",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"silvercustomers": {},
+									"silversales": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_silver_to_gold')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trg_run_on_file_arrival')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Stopped",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_customer_bronze_to_silver",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "BlobEventsTrigger",
+				"typeProperties": {
+					"blobPathBeginsWith": "/bronze/blobs/",
+					"ignoreEmptyBlobs": true,
+					"scope": "[parameters('trg_run_on_file_arrival_properties_typeProperties_scope')]",
+					"events": [
+						"Microsoft.Storage.BlobCreated"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_customer_bronze_to_silver')]"
 			]
 		}
 	]
