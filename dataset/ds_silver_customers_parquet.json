@@ -1,0 +1,40 @@
+{
+	"name": "ds_silver_customers_parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_gen2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "silver"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "SaleID",
+				"type": "INT_32"
+			},
+			{
+				"name": "CustomerID",
+				"type": "INT_32"
+			},
+			{
+				"name": "Amount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "SaleDate",
+				"type": "DATE"
+			},
+			{
+				"name": "IngestionDate",
+				"type": "DATE"
+			}
+		]
+	}
+}

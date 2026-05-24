@@ -1,0 +1,70 @@
+{
+	"name": "df_silver_to_gold",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_customers_parquet",
+						"type": "DatasetReference"
+					},
+					"name": "silvercustomers"
+				},
+				{
+					"dataset": {
+						"referenceName": "salesdata1",
+						"type": "DatasetReference"
+					},
+					"name": "silversales"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_gold_sales",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "aggregate1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          SaleID as integer,",
+				"          CustomerID as integer,",
+				"          Amount as double,",
+				"          SaleDate as date,",
+				"          IngestionDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> silvercustomers",
+				"source(output(",
+				"          saleID as short,",
+				"          Product as string,",
+				"          amount as integer,",
+				"          saledate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> silversales",
+				"silversales aggregate(groupBy(Product),",
+				"     totalsales = sum(amount)) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}
