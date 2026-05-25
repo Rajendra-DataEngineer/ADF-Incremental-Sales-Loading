@@ -1,0 +1,17 @@
+{
+	"name": "ls_azure_sql_projet3",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "sqlserever-raj-project.database.windows.net",
+			"database": "master",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "Rajendra",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDkyNDU0MzQ4LUM0QTUtNDE0OC1COERGLTJBNjUxNzUwMkQ3M18zZDViMGUxZC1hMTdkLTRmMGMtYmViMS04ZDhiNDhjYWFmYTYiDQp9"
+		}
+	}
+}
