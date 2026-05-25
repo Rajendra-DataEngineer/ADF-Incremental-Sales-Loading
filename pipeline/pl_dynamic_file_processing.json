@@ -1,0 +1,31 @@
+{
+	"name": "pl_dynamic_file_processing",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get_file_list",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": []
+			}
+		],
+		"parameters": {
+			"foldername": {
+				"type": "string",
+				"defaultValue": "*.csv"
+			},
+			"filename": {
+				"type": "string",
+				"defaultValue": "*.csv"
+			}
+		},
+		"annotations": []
+	}
+}
