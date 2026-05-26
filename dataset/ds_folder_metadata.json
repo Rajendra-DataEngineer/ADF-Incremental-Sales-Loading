@@ -5,24 +5,16 @@
 			"referenceName": "ls_adls_gen2_project3",
 			"type": "LinkedServiceReference"
 		},
-		"parameters": {
-			"foldername": {
-				"type": "string"
-			},
-			"filename": {
-				"type": "string"
-			}
-		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": {
-					"value": "@dataset().filename",
+				"folderPath": {
+					"value": "salesdata",
 					"type": "Expression"
 				},
-				"folderPath": "@dataset().foldername"
+				"fileSystem": "input"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
