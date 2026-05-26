@@ -10,10 +10,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"folderPath": {
-					"value": "salesdata",
-					"type": "Expression"
-				},
+				"fileName": "salesdata*",
 				"fileSystem": "input"
 			},
 			"columnDelimiter": ",",
