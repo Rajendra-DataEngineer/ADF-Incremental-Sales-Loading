@@ -87,7 +87,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "logs",
+						"referenceName": "salesdata1",
 						"type": "DatasetReference"
 					}
 				],
@@ -120,9 +120,15 @@
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"pipelinename": "@pipeline().Pipeline",
+						"pipelinename": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
 						"activityname": "'Copy_Incremental_sales_copy1'",
-						"errormessage": "@activity('Copy_Incremental_sales_copy1').error.message"
+						"errormessage": {
+							"value": "@activity('Copy_Incremental_sales_copy1').error.message",
+							"type": "Expression"
+						}
 					}
 				}
 			}
