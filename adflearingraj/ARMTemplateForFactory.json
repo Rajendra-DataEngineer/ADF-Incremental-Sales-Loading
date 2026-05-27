@@ -566,7 +566,7 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "logs",
+								"referenceName": "salesdata1",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
@@ -636,6 +636,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/salesdata1')]",
 				"[concat(variables('factoryId'), '/datasets/logs')]",
 				"[concat(variables('factoryId'), '/pipelines/pl_error_handler1')]"
 			]

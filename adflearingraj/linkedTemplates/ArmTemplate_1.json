@@ -280,7 +280,7 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "logs",
+								"referenceName": "salesdata1",
 								"type": "DatasetReference",
 								"parameters": {}
 							}
