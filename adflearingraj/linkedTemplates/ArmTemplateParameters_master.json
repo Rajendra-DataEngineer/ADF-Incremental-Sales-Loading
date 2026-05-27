@@ -17,6 +17,15 @@
 		"ls_adls_gen2_accountKey": {
 			"value": ""
 		},
+		"ls_adls_gen2_project3_accountKey": {
+			"value": ""
+		},
+		"ls_azure_sql_projet3_password": {
+			"value": ""
+		},
+		"ls_log_storage_accountKey": {
+			"value": ""
+		},
 		"AzureSqlLS_properties_typeProperties_server": {
 			"value": "sqlserever-raj-project.database.windows.net"
 		},
@@ -30,6 +39,21 @@
 			"value": "https://rndlearning.dfs.core.windows.net/"
 		},
 		"ls_adls_gen2_properties_typeProperties_url": {
+			"value": "https://rndlearning.dfs.core.windows.net/"
+		},
+		"ls_adls_gen2_project3_properties_typeProperties_url": {
+			"value": "https://rndlearning.dfs.core.windows.net/"
+		},
+		"ls_azure_sql_projet3_properties_typeProperties_server": {
+			"value": "sqlserever-raj-project.database.windows.net"
+		},
+		"ls_azure_sql_projet3_properties_typeProperties_database": {
+			"value": "master"
+		},
+		"ls_azure_sql_projet3_properties_typeProperties_userName": {
+			"value": "Rajendra"
+		},
+		"ls_log_storage_properties_typeProperties_url": {
 			"value": "https://rndlearning.dfs.core.windows.net/"
 		},
 		"trg_run_on_file_arrival_properties_typeProperties_scope": {
