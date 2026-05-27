@@ -114,7 +114,16 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"waitOnCompletion": true
+					"pipeline": {
+						"referenceName": "pl_error_handler1",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"pipelinename": "@pipeline().Pipeline",
+						"activityname": "'Copy_Incremental_sales_copy1'",
+						"errormessage": "@activity('Copy_Incremental_sales_copy1').error.message"
+					}
 				}
 			}
 		],
