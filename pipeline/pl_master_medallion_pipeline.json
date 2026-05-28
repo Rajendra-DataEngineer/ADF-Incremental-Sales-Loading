@@ -1,0 +1,107 @@
+{
+	"name": "pl_master_medallion_pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Run_Silver",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Run_Bronze",
+						"dependencyConditions": [
+							"Succeeded",
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_silver_to_gold",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Run_Gold",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Run_Silver",
+						"dependencyConditions": [
+							"Succeeded",
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_silver_to_gold",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Run_Bronze",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_customer_bronze_to_silver",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "pl_error_handler",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Run_Bronze",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "Run_Silver",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "Run_Gold",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_error_handler",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": []
+	}
+}
