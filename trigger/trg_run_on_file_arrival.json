@@ -2,7 +2,7 @@
 	"name": "trg_run_on_file_arrival",
 	"properties": {
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
