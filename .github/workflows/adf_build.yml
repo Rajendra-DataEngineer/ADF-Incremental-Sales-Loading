@@ -32,8 +32,7 @@ jobs:
       - name: Validate and Build
         # Use the full path explicitly or ensure the script runs from the root
         run: |
-          node ./node_modules/@microsoft/azure-data-factory-utilities/lib/index validate "$(pwd)" /subscriptions/<your-sub-id>/resourceGroups/<your-rg>/providers/Microsoft.DataFactory/factories/<your-df-name>
-        env:
+         node ./node_modules/@microsoft/azure-data-factory-utilities/lib/index validate "$(pwd)" /subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP/providers/Microsoft.DataFactory/factories/YOUR_DATA_FACTORY_NAME        env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
       - name: Upload ARM Template
