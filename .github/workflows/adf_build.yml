@@ -20,3 +20,9 @@ jobs:
           echo "Folder structure looks good!"
           echo "Data Factory Name: adfclearingraj"
           echo "Resource Group: rg-learing"
+
+      - name: Upload ARM Template
+        uses: actions/upload-artifact@v4
+        with:
+          name: arm-templates
+          path: ${{ github.workspace }}/ARMTemplateForFactory.json
