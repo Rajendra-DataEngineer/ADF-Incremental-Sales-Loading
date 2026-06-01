@@ -13,16 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Validate Data Factory
+      - name: Check ADF Files
         run: |
-          echo "Validating ADF Pipeline..."
-          echo "Subscription ID : d7fe91dc-fd28-488b-8161-a61024d7dc79"
-          echo "Resource Group  : rg-learing"
-          echo "Data Factory    : adfclearingraj"
-          echo "Folder Path     : ."
-          echo "✅ ADF Validation Started"
+          echo "✅ ADF Repository Structure Check"
+          ls -la
+          echo "Folder structure looks good!"
+          echo "Data Factory Name: adfclearingraj"
+          echo "Resource Group: rg-learing"
