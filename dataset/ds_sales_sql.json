@@ -1,0 +1,15 @@
+{
+	"name": "ds_sales_sql",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlLS",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"table": "sales"
+		}
+	}
+}
