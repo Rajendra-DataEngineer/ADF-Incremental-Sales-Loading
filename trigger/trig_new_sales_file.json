@@ -1,0 +1,25 @@
+{
+	"name": "trig_new_sales_file",
+	"properties": {
+		"annotations": [],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "pl_event_driven_incremental_sales",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "BlobEventsTrigger",
+		"typeProperties": {
+			"blobPathBeginsWith": "/incomingsales/blobs/",
+			"blobPathEndsWith": ".csv",
+			"ignoreEmptyBlobs": true,
+			"scope": "/subscriptions/d7fe91dc-fd28-488b-8161-a61024d7dc79/resourceGroups/rg-learing/providers/Microsoft.Storage/storageAccounts/rndlearning",
+			"events": [
+				"Microsoft.Storage.BlobCreated"
+			]
+		}
+	}
+}
