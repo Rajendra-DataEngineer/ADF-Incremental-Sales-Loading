@@ -79,6 +79,10 @@
 			"type": "string",
 			"defaultValue": "/subscriptions/d7fe91dc-fd28-488b-8161-a61024d7dc79/resourceGroups/rg-learing/providers/Microsoft.Storage/storageAccounts/rndlearning"
 		},
+		"trig_new_sales_file_properties_typeProperties_scope": {
+			"type": "string",
+			"defaultValue": "/subscriptions/d7fe91dc-fd28-488b-8161-a61024d7dc79/resourceGroups/rg-learing/providers/Microsoft.Storage/storageAccounts/rndlearning"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -174,6 +178,9 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
+					},
+					"trig_new_sales_file_properties_typeProperties_scope": {
+						"value": "[parameters('trig_new_sales_file_properties_typeProperties_scope')]"
 					},
 					"trg_run_on_file_arrival_properties_typeProperties_scope": {
 						"value": "[parameters('trg_run_on_file_arrival_properties_typeProperties_scope')]"
