@@ -9,14 +9,14 @@
 						"referenceName": "ls_adls_gen2",
 						"type": "LinkedServiceReference"
 					},
-					"name": "silvercustomers"
+					"name": "SilverSalesDelta"
 				},
 				{
 					"dataset": {
 						"referenceName": "salesdata1",
 						"type": "DatasetReference"
 					},
-					"name": "silversales"
+					"name": "SilverSalesCsv"
 				}
 			],
 			"sinks": [
@@ -25,12 +25,37 @@
 						"referenceName": "ds_gold_sales",
 						"type": "DatasetReference"
 					},
-					"name": "sink1"
+					"name": "GoldSalesSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_quarantine_silver_sales",
+						"type": "DatasetReference"
+					},
+					"name": "QuarantineSink"
 				}
 			],
 			"transformations": [
 				{
-					"name": "aggregate1"
+					"name": "MapDriftedSales"
+				},
+				{
+					"name": "AssertSalesRequired"
+				},
+				{
+					"name": "SplitValidInvalid"
+				},
+				{
+					"name": "ValidWithKey"
+				},
+				{
+					"name": "JoinWithDelta"
+				},
+				{
+					"name": "AggregateGold"
+				},
+				{
+					"name": "QuarantineRows"
 				}
 			],
 			"scriptLines": [
@@ -43,29 +68,58 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
+				"     ignoreNoFilesFound: true,",
+				"     inferDriftedColumnTypes: true,",
 				"     format: 'delta',",
 				"     fileSystem: 'silver',",
-				"     folderPath: 'sales_transformed') ~> silvercustomers",
+				"     folderPath: 'sales_transformed') ~> SilverSalesDelta",
 				"source(output(",
-				"          saleID as short,",
+				"          saleID as string,",
 				"          Product as string,",
-				"          amount as integer,",
-				"          saledate as date",
+				"          amount as string,",
+				"          saledate as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> silversales",
-				"silversales aggregate(groupBy(Product),",
-				"     totalsales = sum(amount)) ~> aggregate1",
-				"aggregate1 sink(allowSchemaDrift: true,",
+				"     ignoreNoFilesFound: false,",
+				"     inferDriftedColumnTypes: true) ~> SilverSalesCsv",
+				"SilverSalesCsv derive(",
+				"          saleID = toString(coalesce(byName('saleID'), byName('SaleID'), byName('sale_id'))),",
+				"          Product = toString(coalesce(byName('Product'), byName('product'), byName('ProductName'))),",
+				"          amount = toString(coalesce(byName('amount'), byName('Amount'), byName('sales_amount'))),",
+				"          saledate = toString(coalesce(byName('saledate'), byName('SaleDate'), byName('sale_date')))",
+				"     ) ~> MapDriftedSales",
+				"MapDriftedSales assert(expectTrue(!isNull(Product) && Product != '', false, 'Product'),",
+				"     expectTrue(!isNull(amount) && amount != '', false, 'amount')) ~> AssertSalesRequired",
+				"AssertSalesRequired split(validRows = !isNull(Product) && Product != '' && !isNull(amount) && amount != '',",
+				"     invalidRows = isNull(Product) || Product == '' || isNull(amount) || amount == '') ~> SplitValidInvalid",
+				"SplitValidInvalid@validRows derive(SaleID = toInteger(saleID)) ~> ValidWithKey",
+				"ValidWithKey, SilverSalesDelta join(ValidWithKey@SaleID == SilverSalesDelta@SaleID,",
+				"     joinType:'left',",
+				"     broadcast: 'auto')~> JoinWithDelta",
+				"JoinWithDelta aggregate(groupBy(Product),",
+				"     totalsales = sum(toInteger(amount)),",
+				"     totalamount = sum(Amount),",
+				"     customercount = count(CustomerID)) ~> AggregateGold",
+				"AggregateGold sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'parquet',",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink1"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> GoldSalesSink",
+				"SplitValidInvalid@invalidRows derive(errorReason = 'Missing or invalid Product/amount',",
+				"     quarantineTimestamp = currentTimestamp()) ~> QuarantineRows",
+				"QuarantineRows sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> QuarantineSink"
 			]
 		}
 	}

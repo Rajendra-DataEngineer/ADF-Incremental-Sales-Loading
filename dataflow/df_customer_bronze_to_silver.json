@@ -19,11 +19,30 @@
 						"type": "DatasetReference"
 					},
 					"name": "WriteToSilverContainer"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_quarantine_bronze_customers",
+						"type": "DatasetReference"
+					},
+					"name": "QuarantineSink"
 				}
 			],
 			"transformations": [
 				{
+					"name": "MapDriftedColumns"
+				},
+				{
+					"name": "AssertRequired"
+				},
+				{
+					"name": "SplitValidInvalid"
+				},
+				{
 					"name": "SilverCustomersSink"
+				},
+				{
+					"name": "QuarantineRows"
 				}
 			],
 			"scriptLines": [
@@ -34,15 +53,37 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> BronzeCustomers",
-				"BronzeCustomers derive(loaddate = currentTimestamp()) ~> SilverCustomersSink",
+				"     ignoreNoFilesFound: false,",
+				"     inferDriftedColumnTypes: true) ~> BronzeCustomers",
+				"BronzeCustomers derive(",
+				"          CustomerID = toString(coalesce(byName('CustomerID'), byName('customer_id'), byName('cust_id'))),",
+				"          CustomerName = toString(coalesce(byName('CustomerName'), byName('customer_name'), byName('Customer_Name'))),",
+				"          Country = toString(coalesce(byName('Country'), byName('country_code'), byName('country')))",
+				"     ) ~> MapDriftedColumns",
+				"MapDriftedColumns assert(expectTrue(!isNull(CustomerID) && CustomerID != '', false, 'CustomerID'),",
+				"     expectTrue(!isNull(CustomerName) && CustomerName != '', false, 'CustomerName'),",
+				"     expectTrue(!isNull(Country) && Country != '', false, 'Country')) ~> AssertRequired",
+				"AssertRequired split(validRows = !isNull(CustomerID) && CustomerID != '' && !isNull(CustomerName) && CustomerName != '',",
+				"     invalidRows = isNull(CustomerID) || CustomerID == '' || isNull(CustomerName) || CustomerName == '') ~> SplitValidInvalid",
+				"SplitValidInvalid@validRows derive(loaddate = currentTimestamp()) ~> SilverCustomersSink",
 				"SilverCustomersSink sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> WriteToSilverContainer"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> WriteToSilverContainer",
+				"SplitValidInvalid@invalidRows derive(errorReason = 'Missing or invalid required column (CustomerID/CustomerName)',",
+				"     quarantineTimestamp = currentTimestamp()) ~> QuarantineRows",
+				"QuarantineRows sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> QuarantineSink"
 			]
 		}
 	}

@@ -1,11 +1,11 @@
 {
-	"name": "pl_silver_to_gold",
+	"name": "pl_databricks_delta_merge",
 	"properties": {
-		"description": "Silver to gold sales aggregation with schema drift handling, quarantine routing, and error logging.",
+		"description": "Runs the PySpark Delta Lake MERGE notebook on Databricks as an alternative to the ADF incremental pipeline.",
 		"activities": [
 			{
-				"name": "Data flow1",
-				"type": "ExecuteDataFlow",
+				"name": "Run_Delta_Merge_Notebook",
+				"type": "DatabricksNotebook",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -16,24 +16,23 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "df_silver_to_gold",
-						"type": "DataFlowReference"
-					},
-					"compute": {
-						"coreCount": 4,
-						"computeType": "General"
-					},
-					"traceLevel": "Coarse",
-					"runConcurrently": false
+					"notebookPath": "/Repos/adf-incremental-sales-loading/notebooks/incremental_sales_delta_merge",
+					"baseParameters": {
+						"SOURCE_PATH": "abfss://input@rndlearning.dfs.core.windows.net/salesdata1.csv",
+						"TARGET_TABLE": "main.sales.sales_target"
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "_ls_azure_Databricks",
+					"type": "LinkedServiceReference"
 				}
 			},
 			{
-				"name": "Log_Error_DataFlow",
+				"name": "Log_Error_Databricks",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Data flow1",
+						"activity": "Run_Delta_Merge_Notebook",
 						"dependencyConditions": [
 							"Failed"
 						]
@@ -54,9 +53,9 @@
 							"value": "@pipeline().Pipeline",
 							"type": "Expression"
 						},
-						"FailedActivityName": "Data flow1",
+						"FailedActivityName": "Run_Delta_Merge_Notebook",
 						"ErrorMessage": {
-							"value": "@activity('Data flow1').error.message",
+							"value": "@activity('Run_Delta_Merge_Notebook').error.message",
 							"type": "Expression"
 						}
 					}

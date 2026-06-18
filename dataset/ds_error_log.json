@@ -1,0 +1,54 @@
+{
+	"name": "ds_error_log",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_gen2",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"FileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().FileName",
+					"type": "Expression"
+				},
+				"fileSystem": "monitoring",
+				"folderPath": "errors"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "PipelineName",
+				"type": "String"
+			},
+			{
+				"name": "ActivityName",
+				"type": "String"
+			},
+			{
+				"name": "ErrorMessage",
+				"type": "String"
+			},
+			{
+				"name": "RunId",
+				"type": "String"
+			},
+			{
+				"name": "ErrorTimestamp",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

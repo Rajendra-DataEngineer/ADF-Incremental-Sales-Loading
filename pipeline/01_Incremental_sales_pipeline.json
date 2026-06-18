@@ -1,10 +1,11 @@
 {
 	"name": "01_Incremental_sales_pipeline",
 	"properties": {
+		"description": "Watermark-based incremental load: Lookup watermark, filter new records via Mapping Data Flow, upsert to SQL, update watermark. Includes try/catch error logging.",
 		"activities": [
 			{
-				"name": "Copy_Incremental_sales",
-				"type": "Copy",
+				"name": "Lookup_lastdate",
+				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -16,103 +17,70 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "DelimitedTextSource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
-						},
-						"formatSettings": {
-							"type": "DelimitedTextReadSettings"
-						}
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "SELECT ISNULL(MAX(LastModifiedDate), '1900-01-01') AS NewWatermarkValue FROM Sales_Target;",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
 					},
-					"sink": {
-						"type": "AzureSqlSink",
-						"writeBehavior": "insert",
-						"sqlWriterUseTableLock": false
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"name": "saleID",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "SaleID",
-									"type": "Int32",
-									"physicalType": "int"
-								}
-							},
-							{
-								"source": {
-									"name": "Product",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Product",
-									"type": "String",
-									"physicalType": "varchar"
-								}
-							},
-							{
-								"source": {
-									"name": "amount",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "Amount",
-									"type": "Decimal",
-									"physicalType": "decimal",
-									"scale": 2,
-									"precision": 10
-								}
-							},
-							{
-								"source": {
-									"name": "saledate",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "LastModifiedDate",
-									"type": "DateTime",
-									"physicalType": "datetime"
-								}
-							}
-						],
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "ds_bronze_customers",
-						"type": "DatasetReference"
-					}
-				],
-				"outputs": [
-					{
+					"dataset": {
 						"referenceName": "SalesSQLsink",
 						"type": "DatasetReference"
-					}
-				]
+					},
+					"firstRowOnly": true
+				}
 			},
 			{
-				"name": "Lookup_lastdate",
-				"type": "Lookup",
-				"dependsOn": [],
+				"name": "Load_Incremental_Sales",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "Lookup_lastdate",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
-					"retry": 0,
+					"retry": 3,
+					"retryIntervalInSeconds": 60,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_incremental_sales_load",
+						"type": "DataFlowReference",
+						"parameters": {
+							"WatermarkValue": {
+								"value": "@formatDateTime(activity('Lookup_lastdate').output.firstRow.NewWatermarkValue, 'yyyy-MM-dd')",
+								"type": "Expression"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 4,
+						"computeType": "General"
+					},
+					"traceLevel": "Coarse",
+					"runConcurrently": false
+				}
+			},
+			{
+				"name": "Lookup_new_watermark",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "Load_Incremental_Sales",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
 					"secureInput": false
@@ -128,7 +96,8 @@
 					"dataset": {
 						"referenceName": "SalesSQLsink",
 						"type": "DatasetReference"
-					}
+					},
+					"firstRowOnly": true
 				}
 			},
 			{
@@ -136,13 +105,7 @@
 				"type": "SqlServerStoredProcedure",
 				"dependsOn": [
 					{
-						"activity": "Copy_Incremental_sales",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Lookup_lastdate",
+						"activity": "Lookup_new_watermark",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -150,7 +113,7 @@
 				],
 				"policy": {
 					"timeout": "0.12:00:00",
-					"retry": 0,
+					"retry": 3,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
 					"secureInput": false
@@ -160,12 +123,12 @@
 					"storedProcedureName": "[dbo].[UpdateWatermarkValue]",
 					"storedProcedureParameters": {
 						"Tablename": {
-							"value": "'Sales_target'",
+							"value": "'Sales_Target'",
 							"type": "String"
 						},
 						"Lastmodifieddate": {
 							"value": {
-								"value": "@activity('Lookup_Lastdate').output.firstRow.NewWatermarkValue",
+								"value": "@activity('Lookup_new_watermark').output.firstRow.NewWatermarkValue",
 								"type": "Expression"
 							},
 							"type": "Datetime"
@@ -175,6 +138,142 @@
 				"linkedServiceName": {
 					"referenceName": "AzureSqlLS",
 					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Log_Error_Lookup",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Lookup_lastdate",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_error_handler",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ParentPipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"FailedActivityName": "Lookup_lastdate",
+						"ErrorMessage": {
+							"value": "@activity('Lookup_lastdate').error.message",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log_Error_Load",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Load_Incremental_Sales",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_error_handler",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ParentPipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"FailedActivityName": "Load_Incremental_Sales",
+						"ErrorMessage": {
+							"value": "@activity('Load_Incremental_Sales').error.message",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log_Error_New_Watermark",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Lookup_new_watermark",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_error_handler",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ParentPipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"FailedActivityName": "Lookup_new_watermark",
+						"ErrorMessage": {
+							"value": "@activity('Lookup_new_watermark').error.message",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Log_Error_Watermark",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "sp_update_watermark",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_error_handler",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ParentPipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"FailedActivityName": "sp_update_watermark",
+						"ErrorMessage": {
+							"value": "@activity('sp_update_watermark').error.message",
+							"type": "Expression"
+						}
+					}
 				}
 			}
 		],

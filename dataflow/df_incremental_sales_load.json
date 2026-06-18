@@ -1,0 +1,75 @@
+{
+	"name": "df_incremental_sales_load",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "salesdata1",
+						"type": "DatasetReference"
+					},
+					"name": "SalesSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "SalesSQLsink",
+						"type": "DatasetReference"
+					},
+					"name": "SalesSQLSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "NormalizeColumns"
+				},
+				{
+					"name": "FilterNewRecords"
+				},
+				{
+					"name": "MapToTargetSchema"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     WatermarkValue as string ('1900-01-01')",
+				"}",
+				"source(output(",
+				"          saleID as string,",
+				"          Product as string,",
+				"          amount as string,",
+				"          saledate as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> SalesSource",
+				"SalesSource derive(",
+				"          saleID = toString(saleID),",
+				"          Product = toString(Product),",
+				"          amount = toString(amount),",
+				"          saledate = toString(saledate)",
+				"     ) ~> NormalizeColumns",
+				"NormalizeColumns filter(saledate > $WatermarkValue) ~> FilterNewRecords",
+				"FilterNewRecords derive(",
+				"          SaleID = toInteger(saleID),",
+				"          Product = Product,",
+				"          Amount = toDecimal(amount),",
+				"          LastModifiedDate = toTimestamp(saledate, 'yyyy-MM-dd')",
+				"     ) ~> MapToTargetSchema",
+				"MapToTargetSchema sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:true,",
+				"     upsertable:true,",
+				"     keys:['SaleID'],",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SalesSQLSink"
+			]
+		}
+	}
+}

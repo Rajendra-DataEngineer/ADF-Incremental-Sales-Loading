@@ -1,6 +1,7 @@
 {
 	"name": "pl_customer_bronze_to_silver",
 	"properties": {
+		"description": "Bronze to silver customer load with schema drift handling and centralized error logging.",
 		"activities": [
 			{
 				"name": "df_customer_bronze_to_silver",
@@ -8,8 +9,8 @@
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
+					"retry": 2,
+					"retryIntervalInSeconds": 60,
 					"secureOutput": false,
 					"secureInput": false
 				},
@@ -20,13 +21,49 @@
 						"type": "DataFlowReference"
 					},
 					"compute": {
-						"coreCount": 8,
+						"coreCount": 4,
 						"computeType": "General"
 					},
-					"traceLevel": "Fine"
+					"traceLevel": "Coarse",
+					"runConcurrently": false
+				}
+			},
+			{
+				"name": "Log_Error_DataFlow",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "df_customer_bronze_to_silver",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_error_handler",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"ParentPipelineName": {
+							"value": "@pipeline().Pipeline",
+							"type": "Expression"
+						},
+						"FailedActivityName": "df_customer_bronze_to_silver",
+						"ErrorMessage": {
+							"value": "@activity('df_customer_bronze_to_silver').error.message",
+							"type": "Expression"
+						}
+					}
 				}
 			}
 		],
 		"annotations": []
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }

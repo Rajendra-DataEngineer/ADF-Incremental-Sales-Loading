@@ -1,13 +1,57 @@
 {
 	"name": "pl_error_handler",
 	"properties": {
+		"description": "Centralized error logging pipeline. Writes one immutable CSV per failure to ADLS monitoring/errors/.",
+		"parameters": {
+			"ParentPipelineName": {
+				"type": "string"
+			},
+			"FailedActivityName": {
+				"type": "string"
+			},
+			"ErrorMessage": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"ErrorTimestamp": {
+				"type": "String"
+			}
+		},
 		"activities": [
 			{
-				"name": "Copy_Incremental_sales_copy1",
-				"type": "Copy",
+				"name": "Set_ErrorTimestamp",
+				"type": "SetVariable",
 				"dependsOn": [],
 				"policy": {
-					"timeout": "0.12:00:00",
+					"timeout": "0.00:05:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "ErrorTimestamp",
+					"value": {
+						"value": "@utcnow()",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Write_Error_Log",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Set_ErrorTimestamp",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
 					"retry": 3,
 					"retryIntervalInSeconds": 30,
 					"secureOutput": false,
@@ -16,15 +60,13 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "DelimitedTextSource",
-						"storeSettings": {
-							"type": "AzureBlobFSReadSettings",
-							"recursive": true,
-							"enablePartitionDiscovery": false
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "@concat('SELECT ''', replace(pipeline().parameters.ParentPipelineName, '''', ''''''), ''' AS PipelineName, ''', replace(pipeline().parameters.FailedActivityName, '''', ''''''), ''' AS ActivityName, ''', replace(replace(pipeline().parameters.ErrorMessage, '''', ''''''), '\\', '\\\\'), ''' AS ErrorMessage, ''', pipeline().RunId, ''' AS RunId, ''', variables('ErrorTimestamp'), ''' AS ErrorTimestamp')",
+							"type": "Expression"
 						},
-						"formatSettings": {
-							"type": "DelimitedTextReadSettings"
-						}
+						"queryTimeout": "00:10:00",
+						"partitionOption": "None"
 					},
 					"sink": {
 						"type": "DelimitedTextSink",
@@ -34,50 +76,12 @@
 						"formatSettings": {
 							"type": "DelimitedTextWriteSettings",
 							"quoteAllText": true,
-							"fileExtension": ".txt"
+							"fileExtension": ".csv"
 						}
 					},
 					"enableStaging": false,
 					"translator": {
 						"type": "TabularTranslator",
-						"mappings": [
-							{
-								"source": {
-									"name": "PipelineName",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "PipelineName",
-									"type": "String",
-									"physicalType": "String"
-								}
-							},
-							{
-								"source": {
-									"name": "ActivityName",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "ActivityName",
-									"type": "String",
-									"physicalType": "String"
-								}
-							},
-							{
-								"source": {
-									"name": "ErrorMessage",
-									"type": "String",
-									"physicalType": "String"
-								},
-								"sink": {
-									"name": "ErrorMessage",
-									"type": "String",
-									"physicalType": "String"
-								}
-							}
-						],
 						"typeConversion": true,
 						"typeConversionSettings": {
 							"allowDataTruncation": true,
@@ -87,68 +91,25 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "salesdata1",
+						"referenceName": "SalesSQLsink",
 						"type": "DatasetReference"
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "logs",
-						"type": "DatasetReference"
-					}
-				]
-			},
-			{
-				"name": "Execute Pipeline1",
-				"type": "ExecutePipeline",
-				"dependsOn": [
-					{
-						"activity": "Copy_Incremental_sales_copy1",
-						"dependencyConditions": [
-							"Failed"
-						]
-					}
-				],
-				"policy": {
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"pipeline": {
-						"referenceName": "pl_error_handler1",
-						"type": "PipelineReference"
-					},
-					"waitOnCompletion": true,
-					"parameters": {
-						"pipelinename": {
-							"value": "@pipeline().Pipeline",
-							"type": "Expression"
-						},
-						"activityname": "'Copy_Incremental_sales_copy1'",
-						"errormessage": {
-							"value": "@activity('Copy_Incremental_sales_copy1').error.message",
-							"type": "Expression"
+						"referenceName": "ds_error_log",
+						"type": "DatasetReference",
+						"parameters": {
+							"FileName": {
+								"value": "@concat('error_', pipeline().RunId, '.csv')",
+								"type": "Expression"
+							}
 						}
 					}
-				}
+				]
 			}
 		],
-		"parameters": {
-			"pipelinename": {
-				"type": "string"
-			},
-			"activityname": {
-				"type": "string"
-			},
-			"errormessage": {
-				"type": "string"
-			}
-		},
-		"variables": {
-			"errordetails": {
-				"type": "String"
-			}
-		},
 		"annotations": []
-	}
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
 }
